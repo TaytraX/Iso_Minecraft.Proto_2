@@ -5,6 +5,5 @@ public class GLContext {
 
     public void init(long windowID) {
         createCapabilities();
-        glViewport(windowID, );
     }
 }
