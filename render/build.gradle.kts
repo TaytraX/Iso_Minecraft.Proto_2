@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    java
 }
 
 group = "core"
@@ -17,8 +17,6 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:6.0.0"))
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 
-    implementation(project(":"))
-
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -26,10 +24,10 @@ dependencies {
     implementation("org.lwjgl:lwjgl-opengl")
     implementation("org.lwjgl:lwjgl-stb")
 
-    implementation ("org.lwjgl:lwjgl::$lwjglNatives")
-    implementation ("org.lwjgl:lwjgl-opengl::$lwjglNatives")
-    implementation ("org.lwjgl:lwjgl-stb::$lwjglNatives")
-    implementation("org.joml:joml::$jomlVersion")
+    implementation ("org.lwjgl:lwjgl:$lwjglNatives")
+    implementation ("org.lwjgl:lwjgl-opengl:$lwjglNatives")
+    implementation ("org.lwjgl:lwjgl-stb:$lwjglNatives")
+    implementation("org.joml:joml:$jomlVersion")
 
 
 }

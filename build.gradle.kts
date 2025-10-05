@@ -21,6 +21,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    implementation(project(":render"))
+
     implementation("org.lwjgl:lwjgl")
     implementation("org.lwjgl:lwjgl-glfw")
     implementation ("org.lwjgl:lwjgl::$lwjglNatives")

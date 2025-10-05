@@ -1,17 +1,31 @@
+import loader.shader.ShaderManager;
+import management.Rendering;
 import window.Window;
 
 public class Main {
-    Window windo = new Window("Test", 800, 600, true);
+    int width = 800;
+    int height = 600;
+
+    private Window windo;
+    private Rendering rendering;
 
     public void run() {
+        ShaderManager shader = new ShaderManager();
+        windo = new Window("Test", width, height, true);
         windo.create();
+
+
+        rendering = new Rendering(width, height);
+
         while(!windo.shouldClose()) {
+            rendering.render();
             windo.update();
         }
         windo.cleanup();
+        rendering.cleanup();
     }
 
-    public static void main(String[] args) {
+    void main(String[] args) {
         Main engine = new Main();
         engine.run();
     }

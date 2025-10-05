@@ -1,8 +1,7 @@
 package window;
 
+import management.RenderContext;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class WindowTest {
     Window window;
@@ -11,12 +10,14 @@ class WindowTest {
     void create() {
         window = new Window("Test", 800, 600, true);
         window.create();
+        RenderContext context = new RenderContext();
+        context.init(800, 600);
     }
 
     @Test
     void update() {
         create();
-        while(!window.shouldClose()){
+        while(window.shouldClose()){
             window.update();
         }
     }
