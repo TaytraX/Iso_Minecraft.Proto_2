@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import static org.lwjgl.opengl.GL20.*;
 
-class UniformManager {
+public final class UniformManager {
     private final Map<String, Integer> uniforms = new HashMap<>();
     private final int programID;
 

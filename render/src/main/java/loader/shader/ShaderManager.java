@@ -9,12 +9,12 @@ import java.util.Map;
 import static loader.shader.ShaderSourceLoader.*;
 import static org.lwjgl.opengl.GL11.GL_FALSE;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL20.glGetProgramInfoLog;
 
-public class ShaderManager {
+public final class ShaderManager {
     private final Map<String, Shader> shaderCache = new HashMap<>();
 
     public void cacheAllShader() {
+        cacheDefault();
         cacheShader("background");
         cacheShader("full");
     }
@@ -22,30 +22,30 @@ public class ShaderManager {
     private void cacheShader(String shaderName) {
         if(shaderCache.containsKey(shaderName)) return;
 
-        String vertexSource;
-        String fragmentSource;
+        String vertexSource = "";
+        String fragmentSource = "";
         try {
             fragmentSource = tryLoadFragmentSource(shaderName);
-            vertexSource = ShaderSourceLoader.tryLoadVertexSource(shaderName);
+            vertexSource = tryLoadVertexSource(shaderName);
         }  catch (NullPointerException e) {
             System.err.println("fichier '" + shaderName + "' introuvable. " + e.getMessage());
-            System.out.println("Chargement du shaderSourceLoader par défaut...");
-            vertexSource = loadDefaultVertex();
-            fragmentSource = loadDefaultFragment();
         }  catch (RuntimeException e) {
             System.err.println("Erreur OpenGL fichier '" + shaderName + "': " + e.getMessage());
-            System.out.println("Chargement du shaderSourceLoader par défaut...");
-            vertexSource = loadDefaultVertex();
-            fragmentSource = loadDefaultFragment();
-        } catch (Exception e) { // Fallback pour le reste
+        } catch (Exception e) {
             System.err.println("Erreur inattendue fichier '" + shaderName + "': " + e.getMessage());
-            vertexSource = loadDefaultVertex();
-            fragmentSource = loadDefaultFragment();
         }
 
         Shader shader = compile(vertexSource, fragmentSource);
 
         shaderCache.put(shaderName, shader);
+    }
+
+    private void cacheDefault() {
+        String vextexDefault = loadDefaultVertex();
+        String fragmentDefault = loadDefaultFragment();
+
+        Shader defaults = compile(vextexDefault, fragmentDefault);
+        shaderCache.put("default", defaults);
     }
 
     @NotNull
@@ -80,14 +80,6 @@ public class ShaderManager {
         glAttachShader(programID, fragmentID);
         glLinkProgram(programID);
 
-        if (glGetProgrami(programID, GL_LINK_STATUS) == GL_FALSE) {
-            String log = glGetProgramInfoLog(programID);
-            glDeleteShader(vertexID);
-            glDeleteShader(fragmentID);
-            glDeleteProgram(programID);
-            throw new RuntimeException("Linking failed: " + log);
-        }
-
         glDetachShader(programID, vertexID);
         glDetachShader(programID, fragmentID);
         glDeleteShader(vertexID);
@@ -101,7 +93,8 @@ public class ShaderManager {
     }
 
     public Shader getShaderCache(String name) {
-        return shaderCache.get(name);
+        if(shaderCache.containsKey(name)) return shaderCache.get(name);
+        else return shaderCache.get("default");
     }
 
     public void cleanUpAll() {

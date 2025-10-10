@@ -1,6 +1,8 @@
-import loader.shader.ShaderManager;
+
 import management.Rendering;
 import window.Window;
+
+import static org.lwjgl.glfw.GLFW.glfwGetTime;
 
 public class Main {
     int width = 800;
@@ -8,14 +10,23 @@ public class Main {
 
     private Window windo;
     private Rendering rendering;
+    float deltaTime;
+    private double lastTime;
+    private ProcessInput input;
 
     public void run() {
-        ShaderManager shader = new ShaderManager();
+        // Calcul du deltaTime
+        double currentTime = glfwGetTime();
+        if (lastTime == 0.0) lastTime = currentTime;
+
+        deltaTime = (float)(currentTime - lastTime);
+        lastTime = currentTime;
+
         windo = new Window("Test", width, height, true);
         windo.create();
 
-
-        rendering = new Rendering(width, height);
+        input = new ProcessInput(windo.getHandle());
+        rendering = new Rendering(input, deltaTime, width, height);
 
         while(!windo.shouldClose()) {
             rendering.render();

@@ -1,129 +1,19 @@
 package loader.texture;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
-
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL13.glActiveTexture;
 
-public class Texture {
+record Texture(int textureID) {
 
-    int textureID;
-    int width, height;
-    private final String[] extensions = {".png", ".jpg", ".jpeg"};
-
-    public Texture(String filename) {
-        textureID = tryLoadEmbeddedTexture(filename);
-
-        if (textureID == 0) {
-            textureID = createDefaultTexture();
-        }
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    private int tryLoadEmbeddedTexture(String filename) {
-        for (String ext : extensions) {
-            try {
-                InputStream inputStream = getClass().getResourceAsStream("/textures/" + filename + ext);
-
-                if (inputStream != null) {
-
-                    int loadedTextureID = loadTextureFromStream(inputStream);
-                    inputStream.close();
-                    return loadedTextureID;
-                }
-            } catch (Exception e) {
-                // Continue avec l'extension suivante
-                System.err.println("Erreur lors du chargement de " + filename + ext + ": " + e.getMessage());
-            }
-        }
-        return 0;
-    }
-
-    // Pour les ressources embarquées (InputStream)
-    private int loadTextureFromStream(InputStream inputStream) throws Exception {
-        ByteBuffer imageBuffer;
-        ByteBuffer textureBuffer;
-        int textureID;
-
-        // Lire InputStream en byte[]
-        byte[] imageData = inputStream.readAllBytes();
-
-        // Allouer dans le heap natif (pas la stack !)
-        imageBuffer = MemoryUtil.memAlloc(imageData.length);
-        imageBuffer.put(imageData);
-        imageBuffer.flip();
-
-        // Allouer les IntBuffer sur la stack (ça c’est ok)
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer w = stack.mallocInt(1);
-            IntBuffer h = stack.mallocInt(1);
-            IntBuffer comp = stack.mallocInt(1);
-
-            // Charger avec STBImage
-            textureBuffer = STBImage.stbi_load_from_memory(imageBuffer, w, h, comp, 4);
-            if (textureBuffer == null) {
-                MemoryUtil.memFree(imageBuffer);
-                throw new Exception("Could not load from memory: " + STBImage.stbi_failure_reason());
-            }
-
-            this.width = w.get();
-            this.height = h.get();
-        }
-
-        // Libérer l’image brute (on n’en a plus besoin)
-        MemoryUtil.memFree(imageBuffer);
-
-        // Génération texture OpenGL
-        textureID = GL11.glGenTextures();
+    public void bind(int order) {
+        glActiveTexture(order);
         glBindTexture(GL_TEXTURE_2D, textureID);
-        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
-        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL11.GL_RGBA, this.width, this.height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, textureBuffer);
-
-        // Filtrage
-        GL11.glTexParameteri(GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-
-        // Libérer textureBuffer de stb_image
-        STBImage.stbi_image_free(textureBuffer);
-
-        return textureID;
     }
 
-
-    public int createDefaultTexture() {
-        // Texture 2x2 pixels blancs
-        ByteBuffer data = org.lwjgl.BufferUtils.createByteBuffer(16);
-        for (int i = 0; i < 16; i++) {
-            data.put((byte) 255); // Blanc opaque
-        }
-        data.flip();
-
-        int textureID = GL11.glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL11.GL_RGBA, 2, 2, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data);
-
-        GL11.glTexParameteri(GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-
-        this.width = 2;
-        this.height = 2;
-
-        return textureID;
-    }
-
-    public void cleanUp(){
+    public void cleanUp() {
         GL11.glDeleteTextures(textureID);
-    }
-
-    public int getTextureID() {
-        return textureID;
     }
 }
